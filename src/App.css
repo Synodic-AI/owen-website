@@ -254,11 +254,21 @@ footer {
   }
 
   .hero {
-    padding: 4rem 0 2rem;
+    padding: 2.5rem 0 1rem; /* Reduced padding to move body up */
   }
 
   .hero h1 {
-    font-size: 2.5rem; /* Better fit for smaller screens */
+    font-size: 2.2rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .hero p {
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+  }
+
+  .gallery-section {
+    padding: 2rem 0; /* Tighter spacing for the main content */
   }
 
   .gallery-grid {
