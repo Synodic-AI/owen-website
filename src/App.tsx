@@ -1,39 +1,27 @@
 import { useState, useEffect } from 'react'
-import { fetchGallery } from './s3-client'
+import { fetchAbout } from './s3-client'
 import './App.css'
 
-interface Artwork {
-  id: number;
-  title: string;
-  category: string;
-  description?: string;
-  url?: string;
+interface AboutData {
+  name: string;
+  bio: string;
+  age: string;
+  artCount: string;
+  profilePic?: string;
 }
 
 function App() {
-  const [artworks, setArtworks] = useState<Artwork[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [about, setAbout] = useState<AboutData>({
+    name: 'Owen',
+    bio: "Owen is an artist with a passion for bringing imaginary worlds to life. Whether it's sketching legendary dragons or building futuristic cyber-cities, his art is all about big ideas and bold colors.",
+    age: '11',
+    artCount: '50+',
+  });
 
   useEffect(() => {
-    async function loadGallery() {
-      try {
-        const liveArt = await fetchGallery();
-        if (liveArt.length > 0) {
-          setArtworks(liveArt);
-        } else {
-          setArtworks([
-            { id: 1, title: 'Dragon Knight', category: 'Illustration' },
-            { id: 2, title: 'Cyber City', category: 'Digital Art' },
-            { id: 3, title: 'Red Storm', category: 'Abstract' },
-          ]);
-        }
-      } catch (error) {
-        console.error("Failed to load live gallery:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-    loadGallery();
+    fetchAbout().then(data => {
+      if (data) setAbout(data);
+    });
   }, []);
 
   return (
@@ -42,42 +30,45 @@ function App() {
         <div className="container nav-content">
           <div className="logo">OWEN<span className="red-dot">.</span></div>
           <div className="nav-links">
-            <a href="https://about.owensart.com">About</a>
+            <a href="https://owensart.com">Gallery</a>
           </div>
         </div>
       </nav>
 
       <header className="hero">
         <div className="container">
-          <h1>THE ART OF <span className="red-text">OWEN</span></h1>
-          <p>Creative explorer and artist. Bringing imagination to life through bold colors and big ideas.</p>
+          <h1>THE STORY OF <span className="red-text">{about.name.toUpperCase()}</span></h1>
         </div>
       </header>
 
       <main className="container">
-        <section id="gallery" className="gallery-section">
-          <h2 className="section-title">Latest Works</h2>
-          {isLoading ? (
-            <div className="loading-state">Exploring Owen's imagination...</div>
-          ) : (
-            <div className="gallery-grid">
-              {artworks.map((art) => (
-                <div key={art.id} className="art-card">
-                  {art.url ? (
-                    <img src={art.url} alt={art.title} className="art-img" />
-                  ) : (
-                    <div className="art-placeholder">
-                       <span>Artwork {art.id}</span>
-                    </div>
-                  )}
-                  <div className="art-info">
-                    <h3>{art.title}</h3>
-                    <p>{art.category}</p>
-                  </div>
+        <section id="about" className="about-section">
+          <div className="about-grid">
+            <div className="about-image-container">
+              {about.profilePic ? (
+                <img src={about.profilePic} alt={about.name} className="profile-pic" />
+              ) : (
+                <div className="art-placeholder" style={{borderRadius: '50%', aspectRatio: '1/1'}}>
+                  <span>Profile Pic</span>
                 </div>
-              ))}
+              )}
             </div>
-          )}
+            <div className="about-content">
+              <h2 className="section-title">Artist & Explorer</h2>
+              <p>{about.bio}</p>
+              
+              <div className="about-stats" style={{marginTop: '2rem', display: 'flex', gap: '1.5rem'}}>
+                <div className="stat-card">
+                  <h3>{about.age}</h3>
+                  <p>Years Old</p>
+                </div>
+                <div className="stat-card">
+                  <h3>{about.artCount}</h3>
+                  <p>Artworks</p>
+                </div>
+              </div>
+            </div>
+          </div>
         </section>
       </main>
 
