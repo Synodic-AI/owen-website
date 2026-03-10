@@ -43,7 +43,6 @@ function App() {
           <div className="logo">OWEN<span className="red-dot">.</span></div>
           <div className="nav-links">
             <a href="https://about.owensart.com">About</a>
-            <a href="https://admin.owensart.com" className="admin-link">Upload</a>
           </div>
         </div>
       </nav>
