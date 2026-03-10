@@ -1,3 +1,53 @@
+:root {
+  --primary-red: #ff3b3b;
+  --dark-red: #cc0000;
+  --bg-dark: #121212;
+  --bg-card: #1e1e1e;
+  --text-main: #ffffff;
+  --text-muted: #a0a0a0;
+  --font-main: 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--bg-dark);
+  color: var(--text-main);
+  font-family: var(--font-main);
+  line-height: 1.5;
+  overflow-x: hidden;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-dark);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--primary-red);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--dark-red);
+}
+
 .navbar {
   padding: 1.5rem 0;
   border-bottom: 1px solid rgba(255, 59, 59, 0.1);
@@ -42,7 +92,7 @@
 .hero h1 {
   font-size: clamp(3rem, 10vw, 6rem);
   font-weight: 900;
-  line-height: 1.1; /* Increased from 1 for better readability */
+  line-height: 1.1;
   margin-bottom: 1rem;
   text-transform: uppercase;
 }
@@ -143,16 +193,16 @@
   font-weight: 600;
 }
 
-footer {
-  padding: 4rem 0;
-  text-align: center;
-  border-top: 1px solid rgba(255, 59, 59, 0.1);
-  margin-top: 4rem;
-  color: var(--text-muted);
+.art-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
-.red-dot {
-  color: var(--primary-red);
+.art-card:hover .art-img {
+  filter: brightness(0.6);
+  transition: filter 0.3s ease;
 }
 
 .admin-btn {
@@ -172,7 +222,7 @@ footer {
 
 .admin-panel {
   padding: 6rem 0;
-  max-width: 600px;
+  max-width: 800px;
   margin: 0 auto;
 }
 
@@ -222,18 +272,6 @@ footer {
   background: var(--dark-red);
 }
 
-.art-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
-.art-card:hover .art-img {
-  filter: brightness(0.6);
-  transition: filter 0.3s ease;
-}
-
 .submit-btn:disabled {
   background: #666;
   cursor: not-allowed;
@@ -253,6 +291,70 @@ footer {
   margin: 0 auto;
 }
 
+.about-section {
+  padding: 4rem 0;
+  border-bottom: 1px solid rgba(255, 59, 59, 0.1);
+}
+
+.about-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 3rem;
+  align-items: center;
+}
+
+.about-content p {
+  font-size: 1.2rem;
+  color: var(--text-muted);
+  margin-bottom: 1.5rem;
+  line-height: 1.6;
+}
+
+.about-stats {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+.stat-card {
+  background: var(--bg-card);
+  padding: 2rem;
+  border-radius: 12px;
+  text-align: center;
+  border: 1px solid rgba(255, 59, 59, 0.1);
+  transition: transform 0.3s ease;
+}
+
+.stat-card:hover {
+  transform: scale(1.05);
+  border-color: var(--primary-red);
+}
+
+.stat-card h3 {
+  font-size: 3rem;
+  color: var(--primary-red);
+  margin-bottom: 0.5rem;
+}
+
+.stat-card p {
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 1px;
+  font-size: 0.8rem;
+}
+
+footer {
+  padding: 4rem 0;
+  text-align: center;
+  border-top: 1px solid rgba(255, 59, 59, 0.1);
+  margin-top: 4rem;
+  color: var(--text-muted);
+}
+
+.red-dot {
+  color: var(--primary-red);
+}
+
 @media (max-width: 768px) {
   .nav-content {
     flex-direction: column;
@@ -268,12 +370,12 @@ footer {
   }
 
   .hero {
-    padding: 2.5rem 0 1rem; /* Reduced padding to move body up */
+    padding: 2.5rem 0 1rem;
   }
 
   .hero h1 {
     font-size: 2.2rem;
-    line-height: 1.2; /* Slightly more space for mobile */
+    line-height: 1.2;
     margin-bottom: 0.5rem;
   }
 
@@ -283,11 +385,11 @@ footer {
   }
 
   .gallery-section {
-    padding: 2rem 0; /* Tighter spacing for the main content */
+    padding: 2rem 0;
   }
 
   .gallery-grid {
-    grid-template-columns: 1fr; /* 1 column on mobile */
+    grid-template-columns: 1fr;
     gap: 1rem;
   }
 
@@ -298,10 +400,15 @@ footer {
   .upload-form {
     padding: 1.5rem;
   }
+
+  .about-grid {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
 }
 
 @media (max-width: 480px) {
   .container {
-    padding: 0 1rem; /* Less padding on very small screens */
+    padding: 0 1rem;
   }
 }
