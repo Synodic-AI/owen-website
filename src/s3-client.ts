@@ -10,9 +10,10 @@ const s3Client = new S3Client({
 
 const BUCKET = import.meta.env.VITE_AWS_BUCKET_NAME;
 const MANIFEST_KEY = 'gallery.json';
+const ABOUT_KEY = 'about.json';
 
-export const uploadToS3 = async (file: File) => {
-  const fileName = `art/${Date.now()}-${file.name}`;
+export const uploadToS3 = async (file: File, folder: string = 'art') => {
+  const fileName = `${folder}/${Date.now()}-${file.name}`;
   const command = new PutObjectCommand({
     Bucket: BUCKET,
     Key: fileName,
@@ -39,7 +40,6 @@ export const fetchGallery = async () => {
     const bodyContents = await response.Body?.transformToString();
     return bodyContents ? JSON.parse(bodyContents) : [];
   } catch (error) {
-    console.log("No gallery manifest found, starting fresh.");
     return [];
   }
 };
@@ -57,4 +57,30 @@ export const updateGallery = async (newArt: any) => {
 
   await s3Client.send(command);
   return updatedGallery;
+};
+
+export const fetchAbout = async () => {
+  try {
+    const command = new GetObjectCommand({
+      Bucket: BUCKET,
+      Key: ABOUT_KEY,
+    });
+    const response = await s3Client.send(command);
+    const bodyContents = await response.Body?.transformToString();
+    return bodyContents ? JSON.parse(bodyContents) : null;
+  } catch (error) {
+    return null;
+  }
+};
+
+export const updateAbout = async (aboutData: any) => {
+  const command = new PutObjectCommand({
+    Bucket: BUCKET,
+    Key: ABOUT_KEY,
+    Body: JSON.stringify(aboutData),
+    ContentType: 'application/json',
+  });
+
+  await s3Client.send(command);
+  return aboutData;
 };
