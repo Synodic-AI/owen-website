@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { fetchGallery } from './s3-client'
 import './App.css'
 
 interface Artwork {
@@ -9,26 +10,40 @@ interface Artwork {
 }
 
 function App() {
-  const [artworks, setArtworks] = useState<Artwork[]>([
-    { id: 1, title: 'Dragon Knight', category: 'Illustration' },
-    { id: 2, title: 'Cyber City', category: 'Digital Art' },
-    { id: 3, title: 'Red Storm', category: 'Abstract' },
-    { id: 4, title: 'Space Explorer', category: 'Character Design' },
-    { id: 5, title: 'Hidden Forest', category: 'Environment' },
-    { id: 6, title: 'Mechanical Heart', category: 'Tech Art' },
-  ]);
+  const [artworks, setArtworks] = useState<Artwork[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadGallery() {
+      try {
+        const liveArt = await fetchGallery();
+        if (liveArt.length > 0) {
+          setArtworks(liveArt);
+        } else {
+          // Fallback to placeholder data if S3 is empty
+          setArtworks([
+            { id: 1, title: 'Dragon Knight', category: 'Illustration' },
+            { id: 2, title: 'Cyber City', category: 'Digital Art' },
+            { id: 3, title: 'Red Storm', category: 'Abstract' },
+          ]);
+        }
+      } catch (error) {
+        console.error("Failed to load live gallery:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    loadGallery();
+  }, []);
 
   return (
     <div className="app">
       <nav className="navbar">
         <div className="container nav-content">
-          <div className="logo">
-            OWEN<span className="red-dot">.</span>
-          </div>
+          <div className="logo">OWEN<span className="red-dot">.</span></div>
           <div className="nav-links">
-            <a href="#gallery">Gallery</a>
-            <a href="#about">About</a>
-            <a href="#contact">Contact</a>
+            <a href="https://about.owensart.com">About</a>
+            <a href="https://admin.owensart.com" className="admin-link">Upload</a>
           </div>
         </div>
       </nav>
@@ -41,45 +56,29 @@ function App() {
       </header>
 
       <main className="container">
-        <section id="about" className="about-section">
-          <div className="about-grid">
-            <div className="about-content">
-              <h2 className="section-title">About Owen</h2>
-              <p>Owen is an 11-year-old artist with a passion for bringing imaginary worlds to life. Whether it's sketching legendary dragons or building futuristic cyber-cities, his art is all about big ideas and bold colors.</p>
-              <p>When he's not at his drawing desk, you can find him exploring new techniques in digital art or dreaming up his next masterpiece.</p>
-            </div>
-            <div className="about-stats">
-              <div className="stat-card">
-                <h3>11</h3>
-                <p>Years Old</p>
-              </div>
-              <div className="stat-card">
-                <h3>50+</h3>
-                <p>Artworks</p>
-              </div>
-            </div>
-          </div>
-        </section>
-
         <section id="gallery" className="gallery-section">
           <h2 className="section-title">Latest Works</h2>
-          <div className="gallery-grid">
-            {artworks.map((art) => (
-              <div key={art.id} className="art-card">
-                {art.url ? (
-                  <img src={art.url} alt={art.title} className="art-img" />
-                ) : (
-                  <div className="art-placeholder">
-                     <span>Artwork {art.id}</span>
+          {isLoading ? (
+            <div className="loading-state">Exploring Owen's imagination...</div>
+          ) : (
+            <div className="gallery-grid">
+              {artworks.map((art) => (
+                <div key={art.id} className="art-card">
+                  {art.url ? (
+                    <img src={art.url} alt={art.title} className="art-img" />
+                  ) : (
+                    <div className="art-placeholder">
+                       <span>Artwork {art.id}</span>
+                    </div>
+                  )}
+                  <div className="art-info">
+                    <h3>{art.title}</h3>
+                    <p>{art.category}</p>
                   </div>
-                )}
-                <div className="art-info">
-                  <h3>{art.title}</h3>
-                  <p>{art.category}</p>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </section>
       </main>
 
