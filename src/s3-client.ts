@@ -1,4 +1,4 @@
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import { S3Client, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
 
 const s3Client = new S3Client({
   region: import.meta.env.VITE_AWS_REGION,
@@ -8,21 +8,53 @@ const s3Client = new S3Client({
   },
 });
 
+const BUCKET = import.meta.env.VITE_AWS_BUCKET_NAME;
+const MANIFEST_KEY = 'gallery.json';
+
 export const uploadToS3 = async (file: File) => {
-  const fileName = `${Date.now()}-${file.name}`;
+  const fileName = `art/${Date.now()}-${file.name}`;
   const command = new PutObjectCommand({
-    Bucket: import.meta.env.VITE_AWS_BUCKET_NAME,
+    Bucket: BUCKET,
     Key: fileName,
     Body: file,
     ContentType: file.type,
-    // Add ACL if your bucket requires it, e.g., ACL: 'public-read'
   });
 
   try {
     await s3Client.send(command);
-    return `https://${import.meta.env.VITE_AWS_BUCKET_NAME}.s3.${import.meta.env.VITE_AWS_REGION}.amazonaws.com/${fileName}`;
+    return `https://${BUCKET}.s3.${import.meta.env.VITE_AWS_REGION}.amazonaws.com/${fileName}`;
   } catch (error) {
     console.error("Error uploading to S3:", error);
     throw error;
   }
+};
+
+export const fetchGallery = async () => {
+  try {
+    const command = new GetObjectCommand({
+      Bucket: BUCKET,
+      Key: MANIFEST_KEY,
+    });
+    const response = await s3Client.send(command);
+    const bodyContents = await response.Body?.transformToString();
+    return bodyContents ? JSON.parse(bodyContents) : [];
+  } catch (error) {
+    console.log("No gallery manifest found, starting fresh.");
+    return [];
+  }
+};
+
+export const updateGallery = async (newArt: any) => {
+  const currentGallery = await fetchGallery();
+  const updatedGallery = [newArt, ...currentGallery];
+  
+  const command = new PutObjectCommand({
+    Bucket: BUCKET,
+    Key: MANIFEST_KEY,
+    Body: JSON.stringify(updatedGallery),
+    ContentType: 'application/json',
+  });
+
+  await s3Client.send(command);
+  return updatedGallery;
 };

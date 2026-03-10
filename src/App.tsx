@@ -1,8 +1,5 @@
-import { useState } from 'react'
-import './App.css'
-
-import { useState } from 'react'
-import { uploadToS3 } from './s3-client'
+import { useState, useEffect } from 'react'
+import { uploadToS3, updateGallery, fetchGallery } from './s3-client'
 import './App.css'
 
 interface Artwork {
@@ -18,9 +15,16 @@ function App() {
   const [isUploading, setIsUploading] = useState(false);
   const [artworks, setArtworks] = useState<Artwork[]>([]);
 
+  // Load existing gallery on login
+  useEffect(() => {
+    if (isAuthorized) {
+      fetchGallery().then(setArtworks);
+    }
+  }, [isAuthorized]);
+
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (password === 'owen-rocks') { // Simple placeholder password
+    if (password === 'owen-rocks') {
       setIsAuthorized(true);
     } else {
       alert('Wrong password!');
@@ -37,11 +41,9 @@ function App() {
     const category = formData.get('category') as string;
 
     try {
-      let imageUrl = '';
-      if (file) {
-        imageUrl = await uploadToS3(file);
-      }
-
+      if (!file) throw new Error("No file selected");
+      
+      const imageUrl = await uploadToS3(file);
       const newArt: Artwork = {
         id: Date.now(),
         title: title,
@@ -49,11 +51,15 @@ function App() {
         url: imageUrl,
       };
 
-      setArtworks([newArt, ...artworks]);
+      // Atomic Update: Upload image AND update the gallery manifest
+      const updatedGallery = await updateGallery(newArt);
+      setArtworks(updatedGallery);
+      
       e.currentTarget.reset();
-      alert("Successfully uploaded!");
+      alert("Successfully published to OwenArt.com!");
     } catch (error) {
-      alert("Upload failed. Check your S3 configuration.");
+      alert("Upload failed. Make sure S3 CORS and Environment Variables are correct.");
+      console.error(error);
     } finally {
       setIsUploading(false);
     }
