@@ -6,6 +6,7 @@ interface Artwork {
   id: number;
   title: string;
   category: string;
+  description?: string;
   url?: string;
 }
 
@@ -20,7 +21,6 @@ function App() {
         if (liveArt.length > 0) {
           setArtworks(liveArt);
         } else {
-          // Fallback to placeholder data if S3 is empty
           setArtworks([
             { id: 1, title: 'Dragon Knight', category: 'Illustration' },
             { id: 2, title: 'Cyber City', category: 'Digital Art' },
