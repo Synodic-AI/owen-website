@@ -239,6 +239,20 @@ footer {
   cursor: not-allowed;
 }
 
+.admin-grid {
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 1rem;
+}
+
+.admin-card {
+  aspect-ratio: 1/1;
+}
+
+.centered-form {
+  max-width: 500px;
+  margin: 0 auto;
+}
+
 @media (max-width: 768px) {
   .nav-content {
     flex-direction: column;
