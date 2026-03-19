@@ -25,6 +25,7 @@ function App() {
   const [isAuthorized, setIsAuthorized] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [artworks, setArtworks] = useState<Artwork[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [about, setAbout] = useState<AboutData>({
     name: 'Owen',
     bio: '',
@@ -32,14 +33,27 @@ function App() {
     artCount: '50+',
   });
 
+  // Simple routing based on hostname
+  const is_admin_route = window.location.hostname.includes('admin') || window.location.hash === '#admin';
+
   useEffect(() => {
-    if (isAuthorized) {
-      fetchGallery().then(setArtworks);
-      fetchAbout().then(data => {
-        if (data) setAbout(data);
-      });
+    async function loadData() {
+      try {
+        const [liveArt, aboutData] = await Promise.all([
+          fetchGallery(),
+          fetchAbout()
+        ]);
+        
+        if (liveArt.length > 0) setArtworks(liveArt);
+        if (aboutData) setAbout(aboutData);
+      } catch (error) {
+        console.error("Failed to load data:", error);
+      } finally {
+        setIsLoading(false);
+      }
     }
-  }, [isAuthorized]);
+    loadData();
+  }, []);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,18 +76,15 @@ function App() {
 
     try {
       if (!file) throw new Error("No file selected");
-      console.log("Uploading file:", file.name);
       const key = await uploadToS3(file);
-      console.log("Uploaded successfully, key:", key);
-      
       const newArt = { id: Date.now(), title, category, description, key };
       const updatedGallery = await updateGallery(newArt);
       setArtworks(updatedGallery);
       e.currentTarget.reset();
       alert("Art Published!");
     } catch (error) {
-      console.error("Upload process failed:", error);
-      alert("Upload failed. Check console for details.");
+      console.error(error);
+      alert("Upload failed.");
     } finally {
       setIsUploading(false);
     }
@@ -105,89 +116,145 @@ function App() {
       if (freshAbout) setAbout(freshAbout);
       alert("About Me Updated!");
     } catch (error) {
-      console.error("About update failed:", error);
+      console.error(error);
       alert("Update failed.");
     } finally {
       setIsUploading(false);
     }
   };
 
-  if (!isAuthorized) {
-    return (
-      <div className="app admin-login">
-        <div className="container admin-panel">
-          <h2 className="section-title">Admin Login</h2>
-          <form onSubmit={handleLogin} className="upload-form">
-            <div className="form-group">
-              <label>Secret Password</label>
-              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Enter password..." />
-            </div>
-            <button type="submit" className="submit-btn">Unlock Dashboard</button>
-          </form>
+  // --- RENDER ADMIN ---
+  if (is_admin_route) {
+    if (!isAuthorized) {
+      return (
+        <div className="app admin-login-bg">
+          <div className="container admin-panel small-container">
+            <h2 className="section-title">Vault Access</h2>
+            <form onSubmit={handleLogin} className="upload-form">
+              <div className="form-group">
+                <label>Master Key</label>
+                <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" />
+              </div>
+              <button type="submit" className="submit-btn">Unlock Portfolio</button>
+            </form>
+          </div>
         </div>
+      );
+    }
+
+    return (
+      <div className="app">
+        <nav className="navbar">
+          <div className="container nav-content">
+            <div className="logo">OWEN<span className="red-dot">.</span> ADMIN</div>
+            <div className="nav-links"><a href="/">View Live Site</a></div>
+          </div>
+        </nav>
+
+        <main className="container admin-panel">
+          <div className="admin-flex-container">
+            <section className="upload-section">
+              <h2 className="section-title">Upload New Art</h2>
+              <form className="upload-form" onSubmit={handleUpload}>
+                <div className="form-group"><label>Title</label><input name="title" type="text" required /></div>
+                <div className="form-group"><label>Category</label><select name="category"><option>Illustration</option><option>Digital Art</option><option>Sketch</option></select></div>
+                <div className="form-group"><label>Description</label><textarea name="description" rows={3} className="admin-textarea" /></div>
+                <div className="form-group"><label>Art File</label><input name="file" type="file" accept="image/*" required /></div>
+                <button type="submit" className="submit-btn" disabled={isUploading}>{isUploading ? 'Uploading...' : 'Publish Art'}</button>
+              </form>
+            </section>
+
+            <section className="edit-about-section">
+              <h2 className="section-title">About Me</h2>
+              <form className="upload-form" onSubmit={handleAboutUpdate}>
+                <div className="form-group"><label>Name</label><input name="name" type="text" defaultValue={about.name} /></div>
+                <div className="form-group"><label>Bio</label><textarea name="bio" rows={3} defaultValue={about.bio} className="admin-textarea" /></div>
+                <div className="admin-stats-row">
+                  <div className="form-group"><label>Age</label><input name="age" type="text" defaultValue={about.age} /></div>
+                  <div className="form-group"><label>Art Count</label><input name="artCount" type="text" defaultValue={about.artCount} /></div>
+                </div>
+                <div className="form-group">
+                  <label>Profile Image</label>
+                  <div style={{display: 'flex', gap: '1rem', alignItems: 'center'}}>
+                    {about.profilePicUrl && <img src={about.profilePicUrl} className="admin-preview-thumb" alt="Preview" />}
+                    <input name="profilePic" type="file" accept="image/*" />
+                  </div>
+                </div>
+                <button type="submit" className="submit-btn" disabled={isUploading}>{isUploading ? 'Updating...' : 'Save Profile'}</button>
+              </form>
+            </section>
+          </div>
+
+          <div className="recent-uploads">
+            <h3 className="section-title">Recent Assets</h3>
+            <div className="gallery-grid admin-grid">
+              {artworks.slice(0, 12).map(art => (
+                <div key={art.id} className="art-card">
+                  <img src={art.url} alt={art.title} className="art-img" />
+                  <div className="art-info"><h3>{art.title}</h3></div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </main>
       </div>
     );
   }
 
+  // --- RENDER MAIN SITE ---
   return (
     <div className="app">
       <nav className="navbar">
         <div className="container nav-content">
-          <div className="logo">OWEN<span className="red-dot">.</span> ADMIN</div>
+          <div className="logo">OWEN<span className="red-dot">.</span></div>
           <div className="nav-links">
-             <a href="https://owensart.com">View Main Site</a>
+            <a href="#gallery">Gallery</a>
+            <a href="https://about.owensart.com">About</a>
           </div>
         </div>
       </nav>
 
-      <div className="container admin-panel">
-        <div className="admin-flex-container">
-          <section className="upload-section">
-            <h2 className="section-title">Upload Art</h2>
-            <form className="upload-form" onSubmit={handleUpload}>
-              <div className="form-group"><label>Title</label><input name="title" type="text" placeholder="Title of work..." required /></div>
-              <div className="form-group"><label>Category</label><select name="category"><option>Illustration</option><option>Digital Art</option><option>Sketch</option></select></div>
-              <div className="form-group"><label>Description</label><textarea name="description" rows={3} className="admin-textarea" placeholder="Describe the piece..." /></div>
-              <div className="form-group"><label>Art File</label><input name="file" type="file" accept="image/*" required /></div>
-              <button type="submit" className="submit-btn" disabled={isUploading}>{isUploading ? 'Uploading...' : 'Publish Art'}</button>
-            </form>
-          </section>
+      <header className="hero">
+        <div className="container">
+          <h1>THE ART OF <span className="red-text">OWEN</span></h1>
+          <p>Creative explorer and artist. Bringing imagination to life through bold colors and big ideas.</p>
+        </div>
+      </header>
 
-          <section className="edit-about-section">
-            <h2 className="section-title">About Me</h2>
-            <form className="upload-form" onSubmit={handleAboutUpdate}>
-              <div className="form-group"><label>Name</label><input name="name" type="text" defaultValue={about.name} /></div>
-              <div className="form-group"><label>Bio</label><textarea name="bio" rows={3} defaultValue={about.bio} className="admin-textarea" /></div>
-              <div className="admin-stats-row">
-                <div className="form-group"><label>Age</label><input name="age" type="text" defaultValue={about.age} /></div>
-                <div className="form-group"><label>Art Count</label><input name="artCount" type="text" defaultValue={about.artCount} /></div>
-              </div>
-              <div className="form-group">
-                <label>Profile Picture</label>
-                <div style={{display: 'flex', alignItems: 'center', gap: '1rem'}}>
-                  {about.profilePicUrl && <img src={about.profilePicUrl} className="admin-preview-thumb" alt="Preview" />}
-                  <input name="profilePic" type="file" accept="image/*" style={{padding: '0.5rem'}} />
+      <main className="container">
+        <section id="gallery" className="gallery-section">
+          <h2 className="section-title">Latest Works</h2>
+          {isLoading ? (
+            <div className="loading-state">Exploring Owen's imagination...</div>
+          ) : (
+            <div className="gallery-grid">
+              {artworks.map((art) => (
+                <div key={art.id} className="art-card">
+                  {art.url ? (
+                    <img src={art.url} alt={art.title} className="art-img" />
+                  ) : (
+                    <div className="art-placeholder">
+                       <span>Artwork {art.id}</span>
+                    </div>
+                  )}
+                  <div className="art-info">
+                    <h3>{art.title}</h3>
+                    <p>{art.category}</p>
+                  </div>
                 </div>
-              </div>
-              <button type="submit" className="submit-btn" disabled={isUploading}>{isUploading ? 'Updating...' : 'Save Profile'}</button>
-            </form>
-          </section>
-        </div>
+              ))}
+            </div>
+          )}
+        </section>
+      </main>
 
-        <div className="recent-uploads">
-          <h2 className="section-title">Recent Uploads</h2>
-          <div className="gallery-grid admin-grid">
-            {artworks.slice(0, 12).map(art => (
-              <div key={art.id} className="art-card admin-card">
-                <img src={art.url} alt={art.title} className="art-img" />
-                <div className="art-info"><h3>{art.title}</h3></div>
-              </div>
-            ))}
-          </div>
+      <footer>
+        <div className="container">
+          <p>&copy; 2026 Owen's Portfolio. Made with Passion<span className="red-dot">.</span></p>
         </div>
-      </div>
+      </footer>
     </div>
-  );
+  )
 }
 
 export default App
