@@ -33,11 +33,11 @@ function App() {
     artCount: '50+',
   });
 
-  // Simple routing based on hash
-  const [isAdmin, setIsAdmin] = useState(window.location.hash === '#admin');
+  // Routing State
+  const [route, setRoute] = useState(window.location.hash || '#');
 
   useEffect(() => {
-    const handleHashChange = () => setIsAdmin(window.location.hash === '#admin');
+    const handleHashChange = () => setRoute(window.location.hash || '#');
     window.addEventListener('hashchange', handleHashChange);
     
     async function loadData() {
@@ -128,7 +128,7 @@ function App() {
   };
 
   // --- RENDER ADMIN ---
-  if (isAdmin) {
+  if (route.startsWith('#admin')) {
     if (!isAuthorized) {
       return (
         <div className="app admin-login-bg">
@@ -151,7 +151,7 @@ function App() {
         <nav className="navbar">
           <div className="container nav-content">
             <div className="logo">OWEN<span className="red-dot">.</span> ADMIN</div>
-            <div className="nav-links"><a href="/">Back to Site</a></div>
+            <div className="nav-links"><a href="#">Back to Site</a></div>
           </div>
         </nav>
 
@@ -210,58 +210,62 @@ function App() {
     <div className="app">
       <nav className="navbar">
         <div className="container nav-content">
-          <div className="logo">OWEN<span className="red-dot">.</span></div>
+          <div className="logo"><a href="#" style={{color:'inherit', textDecoration:'none'}}>OWEN<span className="red-dot">.</span></a></div>
           <div className="nav-links">
-            <a href="#gallery">Gallery</a>
-            <a href="https://about.owensart.com">About</a>
+            <a href="#gallery" className={route === '#gallery' ? 'active-link' : ''}>Gallery</a>
           </div>
         </div>
       </nav>
 
-      <header className="hero">
-        <div className="container">
-          <h1>THE ART OF <span className="red-text">OWEN</span></h1>
-          <p>Creative explorer and artist. Bringing imagination to life through bold colors and big ideas.</p>
-        </div>
-      </header>
-
-      <main className="container">
-        <section id="gallery" className="gallery-section">
-          <h2 className="section-title">Latest Works</h2>
-          {isLoading ? (
-            <div className="loading-state">Exploring Owen's imagination...</div>
-          ) : (
-            <div className="gallery-grid">
-              {artworks.map((art) => (
-                <div key={art.id} className="art-card">
-                  {art.url ? (
-                    <img src={art.url} alt={art.title} className="art-img" />
-                  ) : (
-                    <div className="art-placeholder">
-                       <span>Artwork {art.id}</span>
-                    </div>
-                  )}
-                  <div className="art-info">
-                    <h3>{art.title}</h3>
-                    <p>{art.category}</p>
-                  </div>
-                </div>
-              ))}
+      {route === '#' ? (
+        <header className="hero full-height-hero">
+          <div className="container">
+            <a href="#admin" className="hero-dragon-link">
+              <img src="/dragon-icon.png" alt="Dragon" className="hero-dragon-icon" />
+            </a>
+            <h1>THE ART OF <span className="red-text">OWEN</span></h1>
+            <p>Creative explorer and artist. Bringing imagination to life through bold colors and big ideas.</p>
+            <div style={{marginTop: '3rem'}}>
+              <a href="#gallery" className="submit-btn" style={{display:'inline-block', width:'auto', padding:'1rem 2.5rem', textDecoration:'none'}}>Explore Gallery</a>
             </div>
-          )}
-        </section>
-      </main>
+          </div>
+        </header>
+      ) : (
+        <main className="container">
+          <section id="gallery" className="gallery-section">
+            <h2 className="section-title">Gallery</h2>
+            {isLoading ? (
+              <div className="loading-state">Exploring Owen's imagination...</div>
+            ) : (
+              <div className="gallery-grid">
+                {artworks.length > 0 ? artworks.map((art) => (
+                  <div key={art.id} className="art-card">
+                    {art.url ? (
+                      <img src={art.url} alt={art.title} className="art-img" />
+                    ) : (
+                      <div className="art-placeholder">
+                         <span>Artwork {art.id}</span>
+                      </div>
+                    )}
+                    <div className="art-info">
+                      <h3>{art.title}</h3>
+                      <p>{art.category}</p>
+                    </div>
+                  </div>
+                )) : (
+                  <div className="loading-state">The gallery is currently being curated. Check back soon!</div>
+                )}
+              </div>
+            )}
+          </section>
+        </main>
+      )}
 
       <footer>
         <div className="container">
           <p>&copy; 2026 Owen's Portfolio. Made with Passion<span className="red-dot">.</span></p>
         </div>
       </footer>
-
-      {/* Secret Admin Button */}
-      <a href="#admin" className="secret-dragon">
-        <img src="/dragon-icon.png" alt="Admin" />
-      </a>
     </div>
   )
 }
