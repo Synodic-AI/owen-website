@@ -357,6 +357,58 @@ a {
   margin: 0 auto;
 }
 
+.admin-flex-container {
+  display: flex;
+  flex-direction: row;
+  gap: 2rem;
+  width: 100%;
+}
+
+.upload-section, .edit-about-section {
+  flex: 1;
+}
+
+.admin-stats-row {
+  display: flex;
+  gap: 1rem;
+}
+
+.admin-textarea {
+  width: 100%;
+  background: var(--bg-dark);
+  color: white;
+  border: 1px solid rgba(255, 59, 59, 0.1);
+  border-radius: 6px;
+  padding: 0.8rem;
+  font-size: 1rem;
+}
+
+.admin-preview-thumb {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 2px solid var(--primary-red);
+  margin-bottom: 0.5rem;
+  display: block;
+}
+
+@media (max-width: 768px) {
+  .admin-flex-container {
+    flex-direction: column;
+  }
+  
+  .admin-panel {
+    padding: 2rem 1rem;
+  }
+  
+  .nav-content {
+    flex-direction: row;
+    justify-content: space-between;
+    padding: 0 1rem;
+  }
+}
+
 footer {
   padding: 4rem 0;
   text-align: center;
