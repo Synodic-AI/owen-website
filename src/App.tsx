@@ -33,10 +33,13 @@ function App() {
     artCount: '50+',
   });
 
-  // Simple routing based on hostname
-  const is_admin_route = window.location.hostname.includes('admin') || window.location.hash === '#admin';
+  // Simple routing based on hash
+  const [isAdmin, setIsAdmin] = useState(window.location.hash === '#admin');
 
   useEffect(() => {
+    const handleHashChange = () => setIsAdmin(window.location.hash === '#admin');
+    window.addEventListener('hashchange', handleHashChange);
+    
     async function loadData() {
       try {
         const [liveArt, aboutData] = await Promise.all([
@@ -44,7 +47,7 @@ function App() {
           fetchAbout()
         ]);
         
-        if (liveArt.length > 0) setArtworks(liveArt);
+        if (liveArt && liveArt.length > 0) setArtworks(liveArt);
         if (aboutData) setAbout(aboutData);
       } catch (error) {
         console.error("Failed to load data:", error);
@@ -53,6 +56,7 @@ function App() {
       }
     }
     loadData();
+    return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
 
   const handleLogin = (e: React.FormEvent) => {
@@ -124,7 +128,7 @@ function App() {
   };
 
   // --- RENDER ADMIN ---
-  if (is_admin_route) {
+  if (isAdmin) {
     if (!isAuthorized) {
       return (
         <div className="app admin-login-bg">
@@ -147,13 +151,13 @@ function App() {
         <nav className="navbar">
           <div className="container nav-content">
             <div className="logo">OWEN<span className="red-dot">.</span> ADMIN</div>
-            <div className="nav-links"><a href="/">View Live Site</a></div>
+            <div className="nav-links"><a href="/">Back to Site</a></div>
           </div>
         </nav>
 
         <main className="container admin-panel">
           <div className="admin-flex-container">
-            <section className="upload-section">
+            <section className="admin-section">
               <h2 className="section-title">Upload New Art</h2>
               <form className="upload-form" onSubmit={handleUpload}>
                 <div className="form-group"><label>Title</label><input name="title" type="text" required /></div>
@@ -164,8 +168,8 @@ function App() {
               </form>
             </section>
 
-            <section className="edit-about-section">
-              <h2 className="section-title">About Me</h2>
+            <section className="admin-section">
+              <h2 className="section-title">Edit About Me</h2>
               <form className="upload-form" onSubmit={handleAboutUpdate}>
                 <div className="form-group"><label>Name</label><input name="name" type="text" defaultValue={about.name} /></div>
                 <div className="form-group"><label>Bio</label><textarea name="bio" rows={3} defaultValue={about.bio} className="admin-textarea" /></div>
@@ -175,7 +179,7 @@ function App() {
                 </div>
                 <div className="form-group">
                   <label>Profile Image</label>
-                  <div style={{display: 'flex', gap: '1rem', alignItems: 'center'}}>
+                  <div className="profile-edit-row">
                     {about.profilePicUrl && <img src={about.profilePicUrl} className="admin-preview-thumb" alt="Preview" />}
                     <input name="profilePic" type="file" accept="image/*" />
                   </div>
@@ -253,6 +257,11 @@ function App() {
           <p>&copy; 2026 Owen's Portfolio. Made with Passion<span className="red-dot">.</span></p>
         </div>
       </footer>
+
+      {/* Secret Admin Button */}
+      <a href="#admin" className="secret-dragon">
+        <img src="/dragon-icon.png" alt="Admin" />
+      </a>
     </div>
   )
 }
