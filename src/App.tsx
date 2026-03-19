@@ -54,22 +54,26 @@ function App() {
     e.preventDefault();
     setIsUploading(true);
     const formData = new FormData(e.currentTarget);
-    const file = (e.currentTarget.elements.namedItem('file') as HTMLInputElement).files?.[0];
+    const fileInput = e.currentTarget.elements.namedItem('file') as HTMLInputElement;
+    const file = fileInput.files?.[0];
     const title = formData.get('title') as string;
     const category = formData.get('category') as string;
     const description = formData.get('description') as string;
 
     try {
       if (!file) throw new Error("No file selected");
+      console.log("Uploading file:", file.name);
       const key = await uploadToS3(file);
+      console.log("Uploaded successfully, key:", key);
+      
       const newArt = { id: Date.now(), title, category, description, key };
       const updatedGallery = await updateGallery(newArt);
       setArtworks(updatedGallery);
       e.currentTarget.reset();
       alert("Art Published!");
     } catch (error) {
-      console.error(error);
-      alert("Upload failed.");
+      console.error("Upload process failed:", error);
+      alert("Upload failed. Check console for details.");
     } finally {
       setIsUploading(false);
     }
@@ -79,7 +83,8 @@ function App() {
     e.preventDefault();
     setIsUploading(true);
     const formData = new FormData(e.currentTarget);
-    const file = (e.currentTarget.elements.namedItem('profilePic') as HTMLInputElement).files?.[0];
+    const fileInput = e.currentTarget.elements.namedItem('profilePic') as HTMLInputElement;
+    const file = fileInput.files?.[0];
     
     try {
       let picKey = about.profilePic;
@@ -95,13 +100,12 @@ function App() {
         profilePic: picKey
       };
 
-      const result = await updateAbout(updatedAbout);
-      // Refresh to get signed URL
+      await updateAbout(updatedAbout);
       const freshAbout = await fetchAbout();
       if (freshAbout) setAbout(freshAbout);
       alert("About Me Updated!");
     } catch (error) {
-      console.error(error);
+      console.error("About update failed:", error);
       alert("Update failed.");
     } finally {
       setIsUploading(false);
@@ -139,18 +143,18 @@ function App() {
       <div className="container admin-panel">
         <div className="admin-flex-container">
           <section className="upload-section">
-            <h2 className="section-title" style={{borderLeft: 'none'}}>Upload New Art</h2>
+            <h2 className="section-title">Upload Art</h2>
             <form className="upload-form" onSubmit={handleUpload}>
-              <div className="form-group"><label>Title</label><input name="title" type="text" required /></div>
+              <div className="form-group"><label>Title</label><input name="title" type="text" placeholder="Title of work..." required /></div>
               <div className="form-group"><label>Category</label><select name="category"><option>Illustration</option><option>Digital Art</option><option>Sketch</option></select></div>
-              <div className="form-group"><label>Description</label><textarea name="description" rows={3} className="admin-textarea" /></div>
+              <div className="form-group"><label>Description</label><textarea name="description" rows={3} className="admin-textarea" placeholder="Describe the piece..." /></div>
               <div className="form-group"><label>Art File</label><input name="file" type="file" accept="image/*" required /></div>
               <button type="submit" className="submit-btn" disabled={isUploading}>{isUploading ? 'Uploading...' : 'Publish Art'}</button>
             </form>
           </section>
 
           <section className="edit-about-section">
-            <h2 className="section-title" style={{borderLeft: 'none'}}>Edit About Me</h2>
+            <h2 className="section-title">About Me</h2>
             <form className="upload-form" onSubmit={handleAboutUpdate}>
               <div className="form-group"><label>Name</label><input name="name" type="text" defaultValue={about.name} /></div>
               <div className="form-group"><label>Bio</label><textarea name="bio" rows={3} defaultValue={about.bio} className="admin-textarea" /></div>
@@ -160,8 +164,10 @@ function App() {
               </div>
               <div className="form-group">
                 <label>Profile Picture</label>
-                {about.profilePicUrl && <img src={about.profilePicUrl} className="admin-preview-thumb" alt="Preview" />}
-                <input name="profilePic" type="file" accept="image/*" />
+                <div style={{display: 'flex', alignItems: 'center', gap: '1rem'}}>
+                  {about.profilePicUrl && <img src={about.profilePicUrl} className="admin-preview-thumb" alt="Preview" />}
+                  <input name="profilePic" type="file" accept="image/*" style={{padding: '0.5rem'}} />
+                </div>
               </div>
               <button type="submit" className="submit-btn" disabled={isUploading}>{isUploading ? 'Updating...' : 'Save Profile'}</button>
             </form>
@@ -169,7 +175,7 @@ function App() {
         </div>
 
         <div className="recent-uploads">
-          <h3 className="section-title" style={{fontSize: '1.5rem', marginTop: '3rem'}}>Recent Uploads</h3>
+          <h2 className="section-title">Recent Uploads</h2>
           <div className="gallery-grid admin-grid">
             {artworks.slice(0, 12).map(art => (
               <div key={art.id} className="art-card admin-card">
