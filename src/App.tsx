@@ -77,7 +77,7 @@ function App() {
       alert("Art Published!");
     } catch (error) {
       console.error(error);
-      alert("Upload failed.");
+      alert("Upload failed: " + (error instanceof Error ? error.message : String(error)));
     } finally {
       setIsUploading(false);
     }

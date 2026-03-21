@@ -320,8 +320,13 @@ body {
 
 /* Scrolling Gallery Preview */
 .scroll-gallery-wrapper {
-  width: 100vw;
-  margin-left: calc(-50vw + 50%);
+  width: 100%;
+  position: relative;
+  left: 50%;
+  right: 50%;
+  margin-left: -50vw;
+  margin-right: -50vw;
+  max-width: 100vw;
   overflow: hidden;
   padding: 3rem 0 1rem;
   position: relative;

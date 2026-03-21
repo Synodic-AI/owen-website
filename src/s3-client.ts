@@ -41,12 +41,14 @@ async function signUrl(key: string | undefined) {
 
 export const uploadToS3 = async (file: File, folder: string = 'art') => {
   if (!checkEnv()) throw new Error("S3 environment variables not configured.");
-  
+
   const fileName = `${folder}/${Date.now()}-${file.name}`;
+  const arrayBuffer = await file.arrayBuffer();
+  const body = new Uint8Array(arrayBuffer);
   const command = new PutObjectCommand({
     Bucket: BUCKET,
     Key: fileName,
-    Body: file,
+    Body: body,
     ContentType: file.type,
   });
 
