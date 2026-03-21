@@ -468,8 +468,24 @@ body {
 .admin-section {
   background: var(--bg-card);
   border-radius: var(--radius);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 2rem;
+  border: 1px solid rgba(255, 59, 59, 0.15);
+  box-shadow: var(--shadow), 0 0 30px rgba(255, 59, 59, 0.05);
   flex: 1;
+}
+
+.admin-section .section-title {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.admin-section .section-title::before {
+  content: '';
+  width: 4px;
+  height: 24px;
+  background: var(--primary-red);
+  border-radius: 4px;
 }
 
 /* Forms */
