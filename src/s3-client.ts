@@ -55,15 +55,9 @@ export const uploadToS3 = async (file: File, folder: string = 'art') => {
 
 export const fetchGallery = async () => {
   try {
-    const command = new GetObjectCommand({
-      Bucket: BUCKET,
-      Key: MANIFEST_KEY,
-    });
-    const response = await s3Client.send(command);
-    const bodyContents = await response.Body?.transformToString();
-    if (!bodyContents) return [];
-
-    const rawGallery = JSON.parse(bodyContents);
+    const res = await fetch(publicUrl(MANIFEST_KEY)!, { cache: 'no-store' });
+    if (!res.ok) return [];
+    const rawGallery = await res.json();
 
     return rawGallery.map((art: any) => {
       const key = art.key || art.url;
@@ -116,14 +110,9 @@ export const deleteArtwork = async (artId: number, artKey?: string) => {
 
 export const fetchAbout = async () => {
   try {
-    const response = await s3Client.send(new GetObjectCommand({
-      Bucket: BUCKET,
-      Key: ABOUT_KEY,
-    }));
-    const bodyContents = await response.Body?.transformToString();
-    if (!bodyContents) return null;
-
-    const about = JSON.parse(bodyContents);
+    const res = await fetch(publicUrl(ABOUT_KEY)!, { cache: 'no-store' });
+    if (!res.ok) return null;
+    const about = await res.json();
     if (about.profilePic) {
       about.profilePicUrl = publicUrl(about.profilePic);
     }
