@@ -59,9 +59,10 @@ function App() {
 
   const handleUpload = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    const form = e.currentTarget;
     setIsUploading(true);
-    const formData = new FormData(e.currentTarget);
-    const fileInput = e.currentTarget.elements.namedItem('file') as HTMLInputElement;
+    const formData = new FormData(form);
+    const fileInput = form.elements.namedItem('file') as HTMLInputElement;
     const file = fileInput.files?.[0];
     const title = formData.get('title') as string;
     const category = formData.get('category') as string;
@@ -73,7 +74,7 @@ function App() {
       const newArt = { id: Date.now(), title, category, description, key };
       const updatedGallery = await updateGallery(newArt);
       setArtworks(updatedGallery);
-      e.currentTarget.reset();
+      form.reset();
       alert("Art Published!");
     } catch (error) {
       console.error(error);
