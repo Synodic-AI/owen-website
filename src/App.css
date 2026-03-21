@@ -609,6 +609,7 @@ body {
 /* Admin Extras */
 .recent-uploads {
   margin-top: 3rem;
+  padding: 0 1rem;
 }
 
 .profile-edit-row {
