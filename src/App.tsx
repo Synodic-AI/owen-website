@@ -137,7 +137,6 @@ function App() {
         name: formData.get('name') as string,
         bio: formData.get('bio') as string,
         age: formData.get('age') as string,
-        artCount: formData.get('artCount') as string,
         profilePic: picKey
       };
 
@@ -182,10 +181,7 @@ function App() {
               <form className="upload-form" onSubmit={handleAboutUpdate}>
                 <div className="form-group"><label>Name</label><input name="name" type="text" defaultValue={about.name} /></div>
                 <div className="form-group"><label>Bio</label><textarea name="bio" rows={3} defaultValue={about.bio} className="admin-textarea" /></div>
-                <div className="admin-stats-row">
-                  <div className="form-group"><label>Age</label><input name="age" type="text" defaultValue={about.age} /></div>
-                  <div className="form-group"><label>Art Count</label><input name="artCount" type="text" defaultValue={about.artCount} /></div>
-                </div>
+                <div className="form-group"><label>Age</label><input name="age" type="text" defaultValue={about.age} /></div>
                 <div className="form-group">
                   <label>Profile Image</label>
                   <div className="profile-edit-row">
