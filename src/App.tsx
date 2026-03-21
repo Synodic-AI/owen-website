@@ -21,8 +21,6 @@ interface AboutData {
 }
 
 function App() {
-  const [password, setPassword] = useState('');
-  const [isAuthorized, setIsAuthorized] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [artworks, setArtworks] = useState<Artwork[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -58,15 +56,6 @@ function App() {
     loadData();
     return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
-
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (password === 'owen-rocks') {
-      setIsAuthorized(true);
-    } else {
-      alert('Wrong password!');
-    }
-  };
 
   const handleUpload = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -129,23 +118,6 @@ function App() {
 
   // --- RENDER ADMIN ---
   if (route.startsWith('#admin')) {
-    if (!isAuthorized) {
-      return (
-        <div className="app admin-login-bg">
-          <div className="container admin-panel small-container">
-            <h2 className="section-title">Vault Access</h2>
-            <form onSubmit={handleLogin} className="upload-form">
-              <div className="form-group">
-                <label>Master Key</label>
-                <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" />
-              </div>
-              <button type="submit" className="submit-btn">Unlock Portfolio</button>
-            </form>
-          </div>
-        </div>
-      );
-    }
-
     return (
       <div className="app">
         <nav className="navbar">
@@ -212,6 +184,7 @@ function App() {
         <div className="container nav-content">
           <div className="logo"><a href="#" style={{color:'inherit', textDecoration:'none'}}>OWEN<span className="red-dot">.</span></a></div>
           <div className="nav-links">
+            <a href="#about" className={route === '#about' ? 'active-link' : ''}>About</a>
             <a href="#gallery" className={route === '#gallery' ? 'active-link' : ''}>Gallery</a>
           </div>
         </div>
@@ -220,16 +193,45 @@ function App() {
       {route === '#' ? (
         <header className="hero full-height-hero">
           <div className="container">
-            <a href="#admin" className="hero-dragon-link">
+            <a href="#about" className="hero-dragon-link">
               <img src="/dragon-icon.png" alt="Dragon" className="hero-dragon-icon" />
             </a>
             <h1>THE ART OF <span className="red-text">OWEN</span></h1>
-            <p>Creative explorer and artist. Bringing imagination to life through bold colors and big ideas.</p>
+            <p>{about.bio || "Creative explorer and artist. Bringing imagination to life through bold colors and big ideas."}</p>
             <div style={{marginTop: '3rem'}}>
               <a href="#gallery" className="submit-btn" style={{display:'inline-block', width:'auto', padding:'1rem 2.5rem', textDecoration:'none'}}>Explore Gallery</a>
             </div>
           </div>
         </header>
+      ) : route === '#about' ? (
+        <main className="container">
+          <section id="about" className="about-section">
+            <h2 className="section-title">About Me</h2>
+            <div className="about-card">
+              <div className="about-image-side">
+                {about.profilePicUrl ? (
+                  <img src={about.profilePicUrl} alt={about.name} className="about-profile-img" />
+                ) : (
+                  <div className="about-profile-placeholder">O</div>
+                )}
+              </div>
+              <div className="about-content-side">
+                <h3>Hi, I'm {about.name}!</h3>
+                <p className="about-bio">{about.bio || "I love creating art that tells stories. Check out my gallery!"}</p>
+                <div className="about-stats">
+                  <div className="stat-item">
+                    <span className="stat-label">Age</span>
+                    <span className="stat-value">{about.age}</span>
+                  </div>
+                  <div className="stat-item">
+                    <span className="stat-label">Artworks</span>
+                    <span className="stat-value">{about.artCount}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+        </main>
       ) : (
         <main className="container">
           <section id="gallery" className="gallery-section">

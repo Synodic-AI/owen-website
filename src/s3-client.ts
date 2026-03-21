@@ -1,15 +1,27 @@
 import { S3Client, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
+const BUCKET = import.meta.env.VITE_AWS_BUCKET_NAME;
+const REGION = import.meta.env.VITE_AWS_REGION;
+const ACCESS_KEY = import.meta.env.VITE_AWS_ACCESS_KEY_ID;
+const SECRET_KEY = import.meta.env.VITE_AWS_SECRET_ACCESS_KEY;
+
+const checkEnv = () => {
+  if (!BUCKET || !REGION || !ACCESS_KEY || !SECRET_KEY) {
+    console.error("S3 Configuration Error: Missing environment variables. Please check your .env file.");
+    return false;
+  }
+  return true;
+};
+
 const s3Client = new S3Client({
-  region: import.meta.env.VITE_AWS_REGION,
+  region: REGION || 'us-east-1',
   credentials: {
-    accessKeyId: import.meta.env.VITE_AWS_ACCESS_KEY_ID,
-    secretAccessKey: import.meta.env.VITE_AWS_SECRET_ACCESS_KEY,
+    accessKeyId: ACCESS_KEY || '',
+    secretAccessKey: SECRET_KEY || '',
   },
 });
 
-const BUCKET = import.meta.env.VITE_AWS_BUCKET_NAME;
 const MANIFEST_KEY = 'gallery.json';
 const ABOUT_KEY = 'about.json';
 
@@ -17,6 +29,7 @@ const ABOUT_KEY = 'about.json';
 async function signUrl(key: string | undefined) {
   if (!key) return undefined;
   if (key.startsWith('http')) return key; // already a URL
+  if (!checkEnv()) return undefined;
   try {
     const command = new GetObjectCommand({ Bucket: BUCKET, Key: key });
     return await getSignedUrl(s3Client, command, { expiresIn: 3600 });
@@ -27,6 +40,8 @@ async function signUrl(key: string | undefined) {
 }
 
 export const uploadToS3 = async (file: File, folder: string = 'art') => {
+  if (!checkEnv()) throw new Error("S3 environment variables not configured.");
+  
   const fileName = `${folder}/${Date.now()}-${file.name}`;
   const command = new PutObjectCommand({
     Bucket: BUCKET,
@@ -43,6 +58,7 @@ export const uploadToS3 = async (file: File, folder: string = 'art') => {
     throw error;
   }
 };
+
 
 export const fetchGallery = async () => {
   try {
