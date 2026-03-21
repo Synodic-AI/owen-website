@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { uploadToS3, updateGallery, fetchGallery, fetchAbout, updateAbout, deleteArtwork } from './s3-client'
 import './App.css'
 
@@ -32,34 +32,6 @@ function App() {
   });
 
   const [lightbox, setLightbox] = useState<Artwork | null>(null);
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const scrollPos = useRef(0);
-  const animRef = useRef<number>(0);
-  const speedRef = useRef(1);
-
-  useEffect(() => {
-    const track = scrollRef.current;
-    if (!track) return;
-    let lastTime = 0;
-    const step = (time: number) => {
-      if (lastTime) {
-        const delta = time - lastTime;
-        scrollPos.current += (delta * 0.05) * speedRef.current;
-        const halfWidth = track.scrollWidth / 2;
-        if (halfWidth > 0 && scrollPos.current >= halfWidth) scrollPos.current -= halfWidth;
-        if (scrollPos.current < 0) scrollPos.current += halfWidth;
-        track.style.transform = `translateX(-${scrollPos.current}px)`;
-      }
-      lastTime = time;
-      animRef.current = requestAnimationFrame(step);
-    };
-    animRef.current = requestAnimationFrame(step);
-    return () => cancelAnimationFrame(animRef.current);
-  }, [artworks]);
-
-  const changeSpeed = (delta: number) => {
-    speedRef.current = Math.max(-2, Math.min(3, speedRef.current + delta));
-  };
 
   // Routing State
   const [route, setRoute] = useState(window.location.hash || '#');
@@ -258,15 +230,13 @@ function App() {
           </div>
           {artworks.length > 0 && (
             <div className="scroll-gallery-wrapper">
-              <button className="scroll-arrow scroll-arrow-left" onClick={() => changeSpeed(-0.5)}>&#8249;</button>
-              <div className="scroll-gallery-track" ref={scrollRef}>
+              <div className="scroll-gallery-track">
                 {[...artworks, ...artworks].map((art, i) => (
                   <div key={`${art.id}-${i}`} className="scroll-gallery-item" onClick={() => art.url && setLightbox(art)}>
                     {art.url && <img src={art.url} alt={art.title} />}
                   </div>
                 ))}
               </div>
-              <button className="scroll-arrow scroll-arrow-right" onClick={() => changeSpeed(0.5)}>&#8250;</button>
             </div>
           )}
         </header>
