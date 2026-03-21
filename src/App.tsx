@@ -31,6 +31,8 @@ function App() {
     artCount: '0',
   });
 
+  const [lightbox, setLightbox] = useState<Artwork | null>(null);
+
   // Routing State
   const [route, setRoute] = useState(window.location.hash || '#');
 
@@ -267,7 +269,7 @@ function App() {
             ) : artworks.length > 0 ? (
               <div className="gallery-grid">
                 {artworks.map((art) => (
-                  <div key={art.id} className="art-card">
+                  <div key={art.id} className="art-card" onClick={() => art.url && setLightbox(art)} style={{cursor: art.url ? 'pointer' : 'default'}}>
                     {art.url ? (
                       <img src={art.url} alt={art.title} className="art-img" />
                     ) : (
@@ -294,6 +296,19 @@ function App() {
           <p>&copy; 2026 Owen's Portfolio. Made with Passion<span className="red-dot">.</span></p>
         </div>
       </footer>
+
+      {lightbox && (
+        <div className="lightbox-overlay" onClick={() => setLightbox(null)}>
+          <div className="lightbox-content" onClick={(e) => e.stopPropagation()}>
+            <img src={lightbox.url} alt={lightbox.title} />
+            <div className="lightbox-info">
+              <h3>{lightbox.title}</h3>
+              <p>{lightbox.category}</p>
+            </div>
+            <button className="lightbox-close" onClick={() => setLightbox(null)}>&times;</button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
