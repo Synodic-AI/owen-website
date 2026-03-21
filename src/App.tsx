@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { uploadToS3, updateGallery, fetchGallery, fetchAbout, updateAbout, deleteArtwork } from './s3-client'
 import './App.css'
 
@@ -32,6 +32,29 @@ function App() {
   });
 
   const [lightbox, setLightbox] = useState<Artwork | null>(null);
+  const [scrollSpeed, setScrollSpeed] = useState(1);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const scrollPos = useRef(0);
+  const animRef = useRef<number>(0);
+
+  useEffect(() => {
+    const track = scrollRef.current;
+    if (!track) return;
+    let lastTime = 0;
+    const step = (time: number) => {
+      if (lastTime) {
+        const delta = time - lastTime;
+        scrollPos.current += (delta * 0.05) * scrollSpeed;
+        const halfWidth = track.scrollWidth / 2;
+        if (scrollPos.current >= halfWidth) scrollPos.current -= halfWidth;
+        track.style.transform = `translateX(-${scrollPos.current}px)`;
+      }
+      lastTime = time;
+      animRef.current = requestAnimationFrame(step);
+    };
+    animRef.current = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(animRef.current);
+  }, [scrollSpeed, artworks]);
 
   // Routing State
   const [route, setRoute] = useState(window.location.hash || '#');
@@ -180,7 +203,7 @@ function App() {
             <div className="gallery-grid admin-grid">
               {artworks.map(art => (
                 <div key={art.id} className="art-card admin-art-card">
-                  <img src={art.url} alt={art.title} className="art-img" />
+                  <img src={art.url} alt={art.title} className="art-img" onClick={() => art.url && setLightbox(art)} style={{cursor: 'pointer'}} />
                   <div className="art-info">
                     <h3>{art.title}</h3>
                     <button className="delete-btn" onClick={() => handleDelete(art)}>Delete</button>
@@ -190,6 +213,19 @@ function App() {
             </div>
           </div>
         </main>
+
+        {lightbox && (
+          <div className="lightbox-overlay" onClick={() => setLightbox(null)}>
+            <div className="lightbox-content" onClick={(e) => e.stopPropagation()}>
+              <img src={lightbox.url} alt={lightbox.title} />
+              <div className="lightbox-info">
+                <h3>{lightbox.title}</h3>
+                <p>{lightbox.category}</p>
+              </div>
+              <button className="lightbox-close" onClick={() => setLightbox(null)}>&times;</button>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
@@ -221,13 +257,15 @@ function App() {
           </div>
           {artworks.length > 0 && (
             <div className="scroll-gallery-wrapper">
-              <div className="scroll-gallery-track">
+              <button className="scroll-arrow scroll-arrow-left" onClick={() => setScrollSpeed(s => Math.max(s - 0.5, -2))}>&#8249;</button>
+              <div className="scroll-gallery-track" ref={scrollRef}>
                 {[...artworks, ...artworks].map((art, i) => (
-                  <div key={`${art.id}-${i}`} className="scroll-gallery-item">
+                  <div key={`${art.id}-${i}`} className="scroll-gallery-item" onClick={() => art.url && setLightbox(art)}>
                     {art.url && <img src={art.url} alt={art.title} />}
                   </div>
                 ))}
               </div>
+              <button className="scroll-arrow scroll-arrow-right" onClick={() => setScrollSpeed(s => Math.min(s + 0.5, 3))}>&#8250;</button>
             </div>
           )}
         </header>
