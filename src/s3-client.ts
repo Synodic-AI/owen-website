@@ -1,4 +1,4 @@
-import { S3Client, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
+import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 const BUCKET = import.meta.env.VITE_AWS_BUCKET_NAME;
@@ -99,6 +99,32 @@ export const updateGallery = async (newArtData: { id: number; title: string; cat
   });
 
   await s3Client.send(command);
+  return fetchGallery();
+};
+
+export const deleteArtwork = async (artId: number, artKey?: string) => {
+  // Delete the image from S3
+  if (artKey) {
+    try {
+      await s3Client.send(new DeleteObjectCommand({ Bucket: BUCKET, Key: artKey }));
+    } catch (error) {
+      console.error("Failed to delete S3 object:", error);
+    }
+  }
+
+  // Remove from gallery manifest
+  const currentGallery = await fetchGallery();
+  const cleanGallery = currentGallery
+    .filter((art: any) => art.id !== artId)
+    .map(({ url, ...rest }: any) => rest);
+
+  await s3Client.send(new PutObjectCommand({
+    Bucket: BUCKET,
+    Key: MANIFEST_KEY,
+    Body: JSON.stringify(cleanGallery),
+    ContentType: 'application/json',
+  }));
+
   return fetchGallery();
 };
 

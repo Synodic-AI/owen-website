@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { uploadToS3, updateGallery, fetchGallery, fetchAbout, updateAbout } from './s3-client'
+import { uploadToS3, updateGallery, fetchGallery, fetchAbout, updateAbout, deleteArtwork } from './s3-client'
 import './App.css'
 
 interface Artwork {
@@ -84,6 +84,17 @@ function App() {
     }
   };
 
+  const handleDelete = async (art: Artwork) => {
+    if (!confirm(`Delete "${art.title}"?`)) return;
+    try {
+      const updatedGallery = await deleteArtwork(art.id, art.key);
+      setArtworks(updatedGallery);
+    } catch (error) {
+      console.error(error);
+      alert("Delete failed: " + (error instanceof Error ? error.message : String(error)));
+    }
+  };
+
   const handleAboutUpdate = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsUploading(true);
@@ -165,10 +176,13 @@ function App() {
           <div className="recent-uploads">
             <h3 className="section-title">Recent Assets</h3>
             <div className="gallery-grid admin-grid">
-              {artworks.slice(0, 12).map(art => (
-                <div key={art.id} className="art-card">
+              {artworks.map(art => (
+                <div key={art.id} className="art-card admin-art-card">
                   <img src={art.url} alt={art.title} className="art-img" />
-                  <div className="art-info"><h3>{art.title}</h3></div>
+                  <div className="art-info">
+                    <h3>{art.title}</h3>
+                    <button className="delete-btn" onClick={() => handleDelete(art)}>Delete</button>
+                  </div>
                 </div>
               ))}
             </div>

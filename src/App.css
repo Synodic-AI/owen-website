@@ -604,6 +604,25 @@ body {
   border: 2px solid var(--primary-red);
 }
 
+/* Delete Button */
+.delete-btn {
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  padding: 0.25rem 0.6rem;
+  font-size: 0.7rem;
+  font-family: var(--font-main);
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-top: 0.3rem;
+}
+
+.delete-btn:hover {
+  color: var(--primary-red);
+  border-color: var(--primary-red);
+}
+
 /* Footer */
 footer {
   padding: 4rem 0;
