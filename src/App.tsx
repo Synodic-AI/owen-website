@@ -32,6 +32,7 @@ function App() {
   });
 
   const [lightbox, setLightbox] = useState<Artwork | null>(null);
+  const [modal, setModal] = useState<{ message: string; onConfirm?: () => void } | null>(null);
 
   // Routing State
   const [route, setRoute] = useState(window.location.hash || '#');
@@ -77,24 +78,32 @@ function App() {
       const updatedGallery = await updateGallery(newArt);
       setArtworks(updatedGallery);
       form.reset();
-      alert("Art Published!");
+      setModal({ message: 'Art Published!' });
+      setTimeout(() => setModal(null), 2000);
     } catch (error) {
       console.error(error);
-      alert("Upload failed: " + (error instanceof Error ? error.message : String(error)));
+      setModal({ message: 'Upload failed: ' + (error instanceof Error ? error.message : String(error)) });
     } finally {
       setIsUploading(false);
     }
   };
 
-  const handleDelete = async (art: Artwork) => {
-    if (!confirm(`Delete "${art.title}"?`)) return;
-    try {
-      const updatedGallery = await deleteArtwork(art.id, art.key);
-      setArtworks(updatedGallery);
-    } catch (error) {
-      console.error(error);
-      alert("Delete failed: " + (error instanceof Error ? error.message : String(error)));
-    }
+  const handleDelete = (art: Artwork) => {
+    setModal({
+      message: `Delete "${art.title}"?`,
+      onConfirm: async () => {
+        setModal(null);
+        try {
+          const updatedGallery = await deleteArtwork(art.id, art.key);
+          setArtworks(updatedGallery);
+          setModal({ message: 'Deleted!' });
+          setTimeout(() => setModal(null), 1500);
+        } catch (error) {
+          console.error(error);
+          setModal({ message: 'Delete failed: ' + (error instanceof Error ? error.message : String(error)) });
+        }
+      }
+    });
   };
 
   const handleAboutUpdate = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -120,10 +129,11 @@ function App() {
       await updateAbout(updatedAbout);
       const freshAbout = await fetchAbout();
       if (freshAbout) setAbout(freshAbout);
-      alert("About Me Updated!");
+      setModal({ message: 'About Me Updated!' });
+      setTimeout(() => setModal(null), 2000);
     } catch (error) {
       console.error(error);
-      alert("Update failed.");
+      setModal({ message: 'Update failed: ' + (error instanceof Error ? error.message : String(error)) });
     } finally {
       setIsUploading(false);
     }
@@ -196,6 +206,24 @@ function App() {
                 <p>{lightbox.category}</p>
               </div>
               <button className="lightbox-close" onClick={() => setLightbox(null)}>&times;</button>
+            </div>
+          </div>
+        )}
+
+        {modal && (
+          <div className="modal-overlay" onClick={() => !modal.onConfirm && setModal(null)}>
+            <div className="modal-box" onClick={(e) => e.stopPropagation()}>
+              <p>{modal.message}</p>
+              <div className="modal-buttons">
+                {modal.onConfirm ? (
+                  <>
+                    <button className="modal-btn modal-btn-cancel" onClick={() => setModal(null)}>Cancel</button>
+                    <button className="modal-btn modal-btn-confirm" onClick={modal.onConfirm}>Delete</button>
+                  </>
+                ) : (
+                  <button className="modal-btn modal-btn-cancel" onClick={() => setModal(null)}>OK</button>
+                )}
+              </div>
             </div>
           </div>
         )}
@@ -315,6 +343,24 @@ function App() {
               <p>{lightbox.category}</p>
             </div>
             <button className="lightbox-close" onClick={() => setLightbox(null)}>&times;</button>
+          </div>
+        </div>
+      )}
+
+      {modal && (
+        <div className="modal-overlay" onClick={() => !modal.onConfirm && setModal(null)}>
+          <div className="modal-box" onClick={(e) => e.stopPropagation()}>
+            <p>{modal.message}</p>
+            <div className="modal-buttons">
+              {modal.onConfirm ? (
+                <>
+                  <button className="modal-btn modal-btn-cancel" onClick={() => setModal(null)}>Cancel</button>
+                  <button className="modal-btn modal-btn-confirm" onClick={modal.onConfirm}>Delete</button>
+                </>
+              ) : (
+                <button className="modal-btn modal-btn-cancel" onClick={() => setModal(null)}>OK</button>
+              )}
+            </div>
           </div>
         </div>
       )}
