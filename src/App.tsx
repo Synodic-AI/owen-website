@@ -28,7 +28,7 @@ function App() {
     name: 'Owen',
     bio: '',
     age: '11',
-    artCount: '50+',
+    artCount: '0',
   });
 
   // Routing State
@@ -202,6 +202,17 @@ function App() {
               <a href="#gallery" className="submit-btn" style={{display:'inline-block', width:'auto', padding:'1rem 2.5rem', textDecoration:'none'}}>Explore Gallery</a>
             </div>
           </div>
+          {artworks.length > 0 && (
+            <div className="scroll-gallery-wrapper">
+              <div className="scroll-gallery-track">
+                {[...artworks, ...artworks].map((art, i) => (
+                  <div key={`${art.id}-${i}`} className="scroll-gallery-item">
+                    {art.url && <img src={art.url} alt={art.title} />}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </header>
       ) : route === '#about' ? (
         <main className="container">
@@ -225,7 +236,7 @@ function App() {
                   </div>
                   <div className="stat-item">
                     <span className="stat-label">Artworks</span>
-                    <span className="stat-value">{about.artCount}</span>
+                    <span className="stat-value">{artworks.length || about.artCount}</span>
                   </div>
                 </div>
               </div>
