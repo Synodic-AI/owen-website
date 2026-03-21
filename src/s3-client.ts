@@ -1,5 +1,4 @@
 import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 const BUCKET = import.meta.env.VITE_AWS_BUCKET_NAME;
 const REGION = import.meta.env.VITE_AWS_REGION;
@@ -25,18 +24,11 @@ const s3Client = new S3Client({
 const MANIFEST_KEY = 'gallery.json';
 const ABOUT_KEY = 'about.json';
 
-// Helper to sign a key if it exists
-async function signUrl(key: string | undefined) {
+// Direct public URL — no signing needed
+function publicUrl(key: string | undefined) {
   if (!key) return undefined;
-  if (key.startsWith('http')) return key; // already a URL
-  if (!checkEnv()) return undefined;
-  try {
-    const command = new GetObjectCommand({ Bucket: BUCKET, Key: key });
-    return await getSignedUrl(s3Client, command, { expiresIn: 3600 });
-  } catch (error) {
-    console.error("Signing failed for", key, error);
-    return undefined;
-  }
+  if (key.startsWith('http')) return key;
+  return `https://${BUCKET}.s3.${REGION}.amazonaws.com/${key}`;
 }
 
 export const uploadToS3 = async (file: File, folder: string = 'art') => {
@@ -54,13 +46,12 @@ export const uploadToS3 = async (file: File, folder: string = 'art') => {
 
   try {
     await s3Client.send(command);
-    return fileName; // Return the key
+    return fileName;
   } catch (error) {
     console.error("Error uploading to S3:", error);
     throw error;
   }
 };
-
 
 export const fetchGallery = async () => {
   try {
@@ -71,15 +62,14 @@ export const fetchGallery = async () => {
     const response = await s3Client.send(command);
     const bodyContents = await response.Body?.transformToString();
     if (!bodyContents) return [];
-    
+
     const rawGallery = JSON.parse(bodyContents);
-    
-    // Generate fresh signed URLs for each artwork
-    return await Promise.all(rawGallery.map(async (art: any) => {
-      const key = art.key || art.url; // Support legacy 'url' field if it was actually a key
-      const url = await signUrl(key);
+
+    return rawGallery.map((art: any) => {
+      const key = art.key || art.url;
+      const url = publicUrl(key);
       return { ...art, url, key };
-    }));
+    });
   } catch {
     return [];
   }
@@ -87,23 +77,20 @@ export const fetchGallery = async () => {
 
 export const updateGallery = async (newArtData: { id: number; title: string; category: string; key: string }) => {
   const currentGallery = await fetchGallery();
-  // Strip signed URLs before saving
   const cleanGallery = currentGallery.map(({ url, ...rest }: any) => rest);
   const updatedGallery = [newArtData, ...cleanGallery];
-  
-  const command = new PutObjectCommand({
+
+  await s3Client.send(new PutObjectCommand({
     Bucket: BUCKET,
     Key: MANIFEST_KEY,
     Body: JSON.stringify(updatedGallery),
     ContentType: 'application/json',
-  });
+  }));
 
-  await s3Client.send(command);
   return fetchGallery();
 };
 
 export const deleteArtwork = async (artId: number, artKey?: string) => {
-  // Delete the image from S3
   if (artKey) {
     try {
       await s3Client.send(new DeleteObjectCommand({ Bucket: BUCKET, Key: artKey }));
@@ -112,7 +99,6 @@ export const deleteArtwork = async (artId: number, artKey?: string) => {
     }
   }
 
-  // Remove from gallery manifest
   const currentGallery = await fetchGallery();
   const cleanGallery = currentGallery
     .filter((art: any) => art.id !== artId)
@@ -130,35 +116,32 @@ export const deleteArtwork = async (artId: number, artKey?: string) => {
 
 export const fetchAbout = async () => {
   try {
-    const command = new GetObjectCommand({
+    const response = await s3Client.send(new GetObjectCommand({
       Bucket: BUCKET,
       Key: ABOUT_KEY,
-    });
-    const response = await s3Client.send(command);
+    }));
     const bodyContents = await response.Body?.transformToString();
     if (!bodyContents) return null;
-    
+
     const about = JSON.parse(bodyContents);
     if (about.profilePic) {
-      about.profilePicUrl = await signUrl(about.profilePic);
+      about.profilePicUrl = publicUrl(about.profilePic);
     }
     return about;
-  } catch (error) {
+  } catch {
     return null;
   }
 };
 
 export const updateAbout = async (aboutData: any) => {
-  // Store the key, not the signed URL
   const { profilePicUrl, ...dataToSave } = aboutData;
-  
-  const command = new PutObjectCommand({
+
+  await s3Client.send(new PutObjectCommand({
     Bucket: BUCKET,
     Key: ABOUT_KEY,
     Body: JSON.stringify(dataToSave),
     ContentType: 'application/json',
-  });
+  }));
 
-  await s3Client.send(command);
   return aboutData;
 };
