@@ -1,4 +1,4 @@
-import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
+import { S3Client, PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
 
 const BUCKET = import.meta.env.VITE_AWS_BUCKET_NAME;
 const REGION = import.meta.env.VITE_AWS_REGION;
