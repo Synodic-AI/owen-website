@@ -236,7 +236,7 @@ function App() {
                   </div>
                   <div className="stat-item">
                     <span className="stat-label">Artworks</span>
-                    <span className="stat-value">{artworks.length || about.artCount}</span>
+                    <span className="stat-value">{artworks.length}</span>
                   </div>
                 </div>
               </div>
@@ -249,28 +249,26 @@ function App() {
             <h2 className="section-title">Gallery</h2>
             {isLoading ? (
               <div className="loading-state">Exploring Owen's imagination...</div>
-            ) : (
-              {artworks.length > 0 ? (
-                <div className="gallery-grid">
-                  {artworks.map((art) => (
-                    <div key={art.id} className="art-card">
-                      {art.url ? (
-                        <img src={art.url} alt={art.title} className="art-img" />
-                      ) : (
-                        <div className="art-placeholder">
-                           <span>Artwork {art.id}</span>
-                        </div>
-                      )}
-                      <div className="art-info">
-                        <h3>{art.title}</h3>
-                        <p>{art.category}</p>
+            ) : artworks.length > 0 ? (
+              <div className="gallery-grid">
+                {artworks.map((art) => (
+                  <div key={art.id} className="art-card">
+                    {art.url ? (
+                      <img src={art.url} alt={art.title} className="art-img" />
+                    ) : (
+                      <div className="art-placeholder">
+                         <span>Artwork {art.id}</span>
                       </div>
+                    )}
+                    <div className="art-info">
+                      <h3>{art.title}</h3>
+                      <p>{art.category}</p>
                     </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="loading-state">The gallery is currently being curated. Check back soon!</div>
-              )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="loading-state">The gallery is currently being curated. Check back soon!</div>
             )}
           </section>
         </main>
