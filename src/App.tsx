@@ -193,7 +193,7 @@ function App() {
       {route === '#' ? (
         <header className="hero full-height-hero">
           <div className="container">
-            <a href="#about" className="hero-dragon-link">
+            <a href="#admin" className="hero-dragon-link">
               <img src="/dragon-icon.png" alt="Dragon" className="hero-dragon-icon" />
             </a>
             <h1>THE ART OF <span className="red-text">OWEN</span></h1>
