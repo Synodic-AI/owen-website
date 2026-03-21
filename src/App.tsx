@@ -32,10 +32,10 @@ function App() {
   });
 
   const [lightbox, setLightbox] = useState<Artwork | null>(null);
-  const [scrollSpeed, setScrollSpeed] = useState(1);
   const scrollRef = useRef<HTMLDivElement>(null);
   const scrollPos = useRef(0);
   const animRef = useRef<number>(0);
+  const speedRef = useRef(1);
 
   useEffect(() => {
     const track = scrollRef.current;
@@ -44,9 +44,10 @@ function App() {
     const step = (time: number) => {
       if (lastTime) {
         const delta = time - lastTime;
-        scrollPos.current += (delta * 0.05) * scrollSpeed;
+        scrollPos.current += (delta * 0.05) * speedRef.current;
         const halfWidth = track.scrollWidth / 2;
-        if (scrollPos.current >= halfWidth) scrollPos.current -= halfWidth;
+        if (halfWidth > 0 && scrollPos.current >= halfWidth) scrollPos.current -= halfWidth;
+        if (scrollPos.current < 0) scrollPos.current += halfWidth;
         track.style.transform = `translateX(-${scrollPos.current}px)`;
       }
       lastTime = time;
@@ -54,7 +55,11 @@ function App() {
     };
     animRef.current = requestAnimationFrame(step);
     return () => cancelAnimationFrame(animRef.current);
-  }, [scrollSpeed, artworks]);
+  }, [artworks]);
+
+  const changeSpeed = (delta: number) => {
+    speedRef.current = Math.max(-2, Math.min(3, speedRef.current + delta));
+  };
 
   // Routing State
   const [route, setRoute] = useState(window.location.hash || '#');
@@ -253,7 +258,7 @@ function App() {
           </div>
           {artworks.length > 0 && (
             <div className="scroll-gallery-wrapper">
-              <button className="scroll-arrow scroll-arrow-left" onClick={() => setScrollSpeed(s => Math.max(s - 0.5, -2))}>&#8249;</button>
+              <button className="scroll-arrow scroll-arrow-left" onClick={() => changeSpeed(-0.5)}>&#8249;</button>
               <div className="scroll-gallery-track" ref={scrollRef}>
                 {[...artworks, ...artworks].map((art, i) => (
                   <div key={`${art.id}-${i}`} className="scroll-gallery-item" onClick={() => art.url && setLightbox(art)}>
@@ -261,7 +266,7 @@ function App() {
                   </div>
                 ))}
               </div>
-              <button className="scroll-arrow scroll-arrow-right" onClick={() => setScrollSpeed(s => Math.min(s + 0.5, 3))}>&#8250;</button>
+              <button className="scroll-arrow scroll-arrow-right" onClick={() => changeSpeed(0.5)}>&#8250;</button>
             </div>
           )}
         </header>
